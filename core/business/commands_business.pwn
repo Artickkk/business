@@ -20,12 +20,9 @@ CMD:adminempresa(playerid, params[])
 
 		SetBusinessDefaultValues(freeid);
 		new string[80];
-		format(string, sizeof string, "Creaste una empresa con éxito. (/adminempresa editar %d)", freeid);
-		SendClientMessage(playerid, 0x9D2121FF, string);
 
-		format(string, sizeof string, "Editaste una empresa. {D17145}(Precio: %d, ID: %d)", cant, business);
+		format(string, sizeof string, "Creaste una empresa. {D17145}(/adminempresa editar %d)", freeid);
 		SendClientMessage(playerid, 0xD1CCE7FF, string);
-
 	}
 	else if (!strcmp(params, "borrar", true, 6))
 	{
@@ -123,11 +120,88 @@ CMD:tiposempresa(playerid)
 	// — iteración sobre el enum, para automatizar según la cantidad de tipos.
 	new str[20], totalstr[144];
 	SendClientMessage(playerid, 0xD9D361FF, "TIPOS DE EMPRESAS");
-	for (new i; i < sizeof enum_business_types; i++) 
+	for (new i = 1; i < BUSINESS_INVALID; i++) 
 	{
 		format(str, sizeof str, "— %d. %s ", i, GetBusinessType(i));
 		strcat(totalstr, str);
 	}
 	SendClientMessage(playerid, 0xD9D361FF, totalstr);
+	return 1;
+}
+
+CMD:empresas(playerid)
+{
+	new totalstr[512], string[30], count = 0;
+	for (new i; i < MAX_BUSINESS; i++) if (Business_Info[i][business_valid])
+	{
+		format(string, sizeof string, "%d\t%s\t%s\n", i, GetBusinessType(Business_Info[i][business_type]), (Business_Info[i][business_owner]) ? ("Comprada") : ("En venta"));
+		strcat(totalstr, string);
+		count++;
+	}
+	if (!count)
+		return SendClientMessage(playerid, 0x9D2121FF, "No hay empresas creadas.");
+
+	#if defined _easyDialog_included
+		Dialog_Show(playerid, ShowBusiness, DIALOG_STYLE_TABLIST, "Empresas", totalstr, "Aceptar", "");
+	#else
+		ShowPlayerDialog(playerid, 32700, DIALOG_STYLE_TABLIST, "Empresas", totalstr, "Aceptar", "");
+	#endif 
+	return 1;
+}
+
+// —— GENERALES
+CMD:entrar(playerid)
+{
+	new info_bizz[2];
+	Streamer_GetArrayData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_EXTRA_ID, info_bizz);
+
+	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_EXTERIOR_BIZZ) // — Tiene k estar en el exterior
+	{
+		print("DEBUG: PICKUP NONE BIZZ");
+		SendClientMessage(playerid, -1, "DEBUG: PICKUP NONE BIZZ");
+		return 1;
+	}
+
+	new Float:bizzX, Float:bizzY, Float:bizzZ;
+	Streamer_GetFloatData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_X, bizzX);
+	Streamer_GetFloatData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_Y, bizzY);
+	Streamer_GetFloatData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_Z, bizzZ);
+	new bizzVW = Streamer_GetIntData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_WORLD_ID);
+	new bizzINT = Streamer_GetIntData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_INTERIOR_ID);
+
+	if (!IsPlayerInRangeOfPoint(playerid, 5.0, bizzX, bizzY, bizzZ) && GetPlayerInterior(playerid) != bizzINT && GetPlayerVirtualWorld(playerid) != bizzVW)
+		return 1;
+
+	SetPlayerPos(playerid, Business_Info[info_bizz[1]][business_IntX], Business_Info[info_bizz[1]][business_IntY], Business_Info[info_bizz[1]][business_IntZ]);
+	SetPlayerInterior(playerid, Business_Info[info_bizz[1]][business_IntInterior]);
+	SetPlayerVirtualWorld(playerid, Business_Info[info_bizz[1]][business_IntWorld]);
+	return 1;
+}
+
+CMD:salir(playerid)
+{
+	new info_bizz[2];
+	Streamer_GetArrayData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_EXTRA_ID, info_bizz);
+
+	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_INTERIOR_BIZZ) // — Tiene k estar en interior
+	{
+		print("DEBUG: PICKUP NONE BIZZ");
+		SendClientMessage(playerid, -1, "DEBUG: PICKUP NONE BIZZ");
+		return 1;
+	}
+
+	new Float:bizzX, Float:bizzY, Float:bizzZ;
+	Streamer_GetFloatData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_X, bizzX);
+	Streamer_GetFloatData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_Y, bizzY);
+	Streamer_GetFloatData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_Z, bizzZ);
+	new bizzVW = Streamer_GetIntData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_WORLD_ID);
+	new bizzINT = Streamer_GetIntData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_INTERIOR_ID);
+
+	if (!IsPlayerInRangeOfPoint(playerid, 5.0, bizzX, bizzY, bizzZ) && GetPlayerInterior(playerid) != bizzINT && GetPlayerVirtualWorld(playerid) != bizzVW)
+		return 1;
+
+	SetPlayerPos(playerid, Business_Info[info_bizz[1]][business_ExtX], Business_Info[info_bizz[1]][business_ExtY], Business_Info[info_bizz[1]][business_ExtZ]);
+	SetPlayerInterior(playerid, Business_Info[info_bizz[1]][business_ExtInterior]);
+	SetPlayerVirtualWorld(playerid, Business_Info[info_bizz[1]][business_ExtWorld]);
 	return 1;
 }
