@@ -1,6 +1,106 @@
+// —— CREDITOS
+// — Artic, 18/Abril
+
+// —— PUBLIC CALLBACKS
+public OnGameModeInit()
+{
+	
+	handle_business = mysql_connect("localhost", "root", "", "business");
+	if (handle_business == MYSQL_INVALID_HANDLE || mysql_errno(handle_business) != 0)
+	{
+		print("Connection error (Business)");
+		return 1;
+	}
+
+	mysql_tquery(handle_business, "SELECT * FROM business", "LoadBusiness");
+
+	#if defined bizz_OnGameModeInit
+		return bizz_OnGameModeInit();
+	#else
+		return 1;
+	#endif
+}
+#if defined _ALS_OnGameModeInit
+	#undef OnGameModeInit
+#else
+	#define _ALS_OnGameModeInit
+#endif
+
+#define OnGameModeInit bizz_OnGameModeInit
+#if defined bizz_OnGameModeInit
+	forward bizz_OnGameModeInit();
+#endif
+
+public OnGameModeExit()
+{
+	if (handle_business != MYSQL_INVALID_HANDLE)
+		mysql_close(handle_business);
+
+	#if defined bizz_OnGameModeExit
+		return bizz_OnGameModeExit();
+	#else
+		return 1;
+	#endif
+}
+#if defined _ALS_OnGameModeExit
+	#undef OnGameModeExit
+#else
+	#define _ALS_OnGameModeExit
+#endif
+
+#define OnGameModeExit bizz_OOnGameModeExit
+#if defined bizz_OnGameModeExit
+	forward bizz_OnGameModeExit();
+#endif
+
+
+// —— FORWARDED FUNCTIONS (QUERIES)
+forward LoadBusiness();
+public LoadBusiness()
+{
+	new rows = cache_num_rows();
+	if (rows)
+	{
+		for (new i; i < rows; i++)
+		{
+			cache_get_value_int(i, "ID", Business_Info[i][business_ID]);
+			cache_get_value_int(i, "type", Business_Info[i][business_type]);
+			cache_get_value_int(i, "owner", Business_Info[i][business_owner]);
+			cache_get_value_int(i, "money", Business_Info[i][business_money]);
+			cache_get_value_int(i, "price", Business_Info[i][business_price]);
+
+			cache_get_value_float(i, "int_x", Business_Info[i][business_IntX]);
+			cache_get_value_float(i, "int_y", Business_Info[i][business_IntY]);
+			cache_get_value_float(i, "int_z", Business_Info[i][business_IntZ]);
+			cache_get_value_float(i, "ext_x", Business_Info[i][business_ExtX]);
+			cache_get_value_float(i, "ext_y", Business_Info[i][business_ExtY]);
+			cache_get_value_float(i, "ext_z", Business_Info[i][business_ExtZ]);
+
+			cache_get_value_int(i, "int_interior", Business_Info[i][business_IntInterior]);
+			cache_get_value_int(i, "int_world", Business_Info[i][business_IntWorld]);
+			cache_get_value_int(i, "ext_interior", Business_Info[i][business_ExtInterior]);
+			cache_get_value_int(i, "ext_world", Business_Info[i][business_ExtWorld]);
+			Business_Info[i][business_valid] = true;
+
+			UpdateBusinessLabel(i, true);
+			total_business++;
+		}
+		printf("Total business loaded: %d.", total_business);
+	}
+	return 1;
+}
+
+forward OnBusinessInsert(business);
+public OnBusinessInsert(business)
+{
+	Business_Info[business][business_ID] = cache_insert_id();
+	return 1;
+}
+
+// —— OnGameModeInitS
 SearchFreeBusinessID()
 {
-	new id = INVALID_ID;
+	new id = INVALID_BUSINESS_ID;
 	for (new i; i < MAX_BUSINESS; i++)
 	{
 		if (!Business_Info[i][business_valid])
@@ -31,8 +131,12 @@ GetBusinessType(type)
 
 UpdateBusinessLabel(business, bool:destroy = false)
 {
-	new string[60];
 
+	// — desbug
+	if (Business_Info[business][business_type] != BUSINESS_MECHANIC && IsValidDynamic3DTextLabel(Business_Info[business][mechanic_label]))
+		DestroyDynamic3DTextLabel(Business_Info[business][mechanic_label]);
+
+	new string[80];
 	if (destroy)
 	{
 		if (IsValidDynamic3DTextLabel(Business_Info[business][business_ExtLabel]))
@@ -90,10 +194,25 @@ UpdateBusinessLabel(business, bool:destroy = false)
 	return 1;
 }
 
+CreateBusiness(business)
+{
+	static sql_query[128];
+	mysql_format(handle_business, sql_query, sizeof sql_query, 
+		"INSERT INTO business (ext_x, ext_y, ext_Z, ext_interior, ext_world, price) VALUES (%f, %f, %f, %d, %d, %d, %d)", 
+		Business_Info[business][business_ExtX], Business_Info[business][business_ExtY], Business_Info[business][business_ExtZ],
+		Business_Info[business][business_ExtInterior], Business_Info[business][business_ExtWorld], Business_Info[business][business_price]
+	);
+
+	mysql_tquery(handle_business, sql_query, "OnBusinessInsert", "d", business);
+	return 1;
+}
+
 SetBusinessDefaultValues(business)
 {
+	new clean_business[business_info];
+	Business_Info[business] = clean_business;
+
 	Business_Info[business][business_price] = random(500000) + 10000;
-	Business_Info[business][business_owner] = 0;
 
 	UpdateBusinessLabel(business, true);
 	return 1;
@@ -112,6 +231,9 @@ DestroyBusiness(business)
 
 	if (IsValidDynamicPickup(Business_Info[business][business_ExtPickup]))
 		DestroyDynamicPickup(Business_Info[business][business_ExtPickup]);
+
+	if (IsValidDynamic3DTextLabel(Business_Info[business][mechanic_label]))
+		DestroyDynamic3DTextLabel(Business_Info[business][mechanic_label]);
 
 	Business_Info[business][business_valid] = false;
 	return 1;

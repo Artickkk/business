@@ -10,17 +10,20 @@ CMD:adminempresa(playerid, params[])
 	if (!strcmp(params, "crear", true, 5))
 	{
 		new freeid = SearchFreeBusinessID();
-		if (freeid == INVALID_ID)
+		if (freeid == INVALID_BUSINESS_ID)
 			return SendClientMessage(playerid, 0x942B15FF, "No hay mas slots.");
 
-		Business_Info[freeid][business_valid] = true;
+		SetBusinessDefaultValues(freeid);
+
 		GetPlayerPos(playerid, Business_Info[freeid][business_ExtX], Business_Info[freeid][business_ExtY], Business_Info[freeid][business_ExtZ]);
 		Business_Info[freeid][business_ExtInterior] = GetPlayerInterior(playerid);
 		Business_Info[freeid][business_ExtWorld] = GetPlayerVirtualWorld(playerid);
+		Business_Info[freeid][business_valid] = true;
 
-		SetBusinessDefaultValues(freeid);
+		CreateBusiness(freeid);
+		total_business++;
+
 		new string[80];
-
 		format(string, sizeof string, "Creaste una empresa. {D17145}(/adminempresa editar %d)", freeid);
 		SendClientMessage(playerid, 0xD1CCE7FF, string);
 	}
@@ -30,7 +33,7 @@ CMD:adminempresa(playerid, params[])
 		if (sscanf(params, "s[6]i", params, business)) 
 			return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa borrar [ID]");
 
-		if (business > MAX_BUSINESS)
+		if (business > total_business)
 			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");
 
 		if (!Business_Info[business][business_valid])
@@ -47,7 +50,7 @@ CMD:adminempresa(playerid, params[])
 		if (sscanf(params, "s[32]is[12]", params, business, type_s)) 
 			return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] [Exterior - interior - precio - tipo]");	
 
-		if (business > MAX_BUSINESS)
+		if (business > total_business)
 			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");
 
 		if (!Business_Info[business][business_valid])
@@ -132,7 +135,7 @@ CMD:tiposempresa(playerid)
 CMD:empresas(playerid)
 {
 	new totalstr[512], string[30], count = 0;
-	for (new i; i < MAX_BUSINESS; i++) if (Business_Info[i][business_valid])
+	for (new i; i < total_business; i++) if (Business_Info[i][business_valid])
 	{
 		format(string, sizeof string, "%d\t%s\t%s\n", i, GetBusinessType(Business_Info[i][business_type]), (Business_Info[i][business_owner]) ? ("Comprada") : ("En venta"));
 		strcat(totalstr, string);

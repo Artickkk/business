@@ -1,9 +1,9 @@
 // —— CREDITOS
 // — Artic, 18/Abril
 
-// —— MAX
+// —— DEFINES
 #define MAX_BUSINESS 50
-#define INVALID_ID -1
+#define INVALID_BUSINESS_ID -1
 
 // —— ENUM
 enum 
@@ -25,11 +25,13 @@ enum
 	PICKUP_NONE_BIZZ = 0,
 	PICKUP_INTERIOR_BIZZ,
 	PICKUP_EXTERIOR_BIZZ,
-	PICKUP_SHOP_BIZZ
+	PICKUP_SHOP_BIZZ,
+	PICKUP_REPAIR_MECHANIC,
 }
 
 enum business_info
 {
+	// ——————————————— INFORMACIÓN GENERAL
 	// — SQL
 	business_ID,								// — ID SQL
 	bool:business_valid,						// — Empresa válida y creada
@@ -58,10 +60,35 @@ enum business_info
 	// — Label interior y Exterior
 	Text3D:business_IntLabel,					// — Label interior
 	Text3D:business_ExtLabel					// — Label exterior
+	// ——————————————— DISTRIBUCIÓN SEGÚN EL TIPO DE EMPRESA
+	// ————— MECÁNICO
+	// —— Label reparación
+	Text3D:mechanic_label,						// — Label reparación
+	// —— Posiciones de reparación
+	Float:mechanic_repairX,						// — Coordenada reparación X
+	Float:mechanic_repairY,						// — Coordenada reparación Y
+	Float:mechanic_repairZ,						// — Coordenada reparación Z
+	Float:mechanic_repairR,						// — Coordenada reparación R
+	mechanic_interior,
+	mechanic_world,	
+	// —— Precios
+	mechanic_price_repair,						// — Precio de reparación
+	mechanic_price_colour,						// — Precio de pintura
+	mechanic_price_gas,							// — Precio de gasolina
+	mechanic_price_oil							// — Precio de aceite
 }
 new Business_Info[MAX_BUSINESS][business_info];
 
+// — others
+new 
+	MySQL:handle_business,
+	total_business
+;
+
 // —— MÓDULOS
+// — General
 #include "../core/business/player_business.pwn"
 #include "../core/business/commands_business.pwn"
 #include "../core/business/functions_business.pwn"
+// — Taller mecánico
+#include "../core/business/mechanic_business.pwn"
