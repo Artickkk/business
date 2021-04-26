@@ -59,7 +59,7 @@ enum business_info
 	business_ExtPickup,							// — ID Pickup exterior compra
 	// — Label interior y Exterior
 	Text3D:business_IntLabel,					// — Label interior
-	Text3D:business_ExtLabel					// — Label exterior
+	Text3D:business_ExtLabel,					// — Label exterior
 	// ——————————————— DISTRIBUCIÓN SEGÚN EL TIPO DE EMPRESA
 	// ————— MECÁNICO
 	// —— Label reparación

@@ -1,7 +1,7 @@
-// â€”â€” CREDITOS
-// â€” Artic, 18/Abril
+// —— CREDITOS
+// — Artic, 18/Abril
 
-// â€”â€” PUBLIC CALLBACKS
+// —— PUBLIC CALLBACKS
 public OnGameModeInit()
 {
 	
@@ -12,6 +12,7 @@ public OnGameModeInit()
 		return 1;
 	}
 
+	print("conexion hecha");
 	mysql_tquery(handle_business, "SELECT * FROM business", "LoadBusiness");
 
 	#if defined bizz_OnGameModeInit
@@ -54,7 +55,7 @@ public OnGameModeExit()
 #endif
 
 
-// â€”â€” FORWARDED FUNCTIONS (QUERIES)
+// —— FORWARDED FUNCTIONS (QUERIES)
 forward LoadBusiness();
 public LoadBusiness()
 {
@@ -80,6 +81,31 @@ public LoadBusiness()
 			cache_get_value_int(i, "int_world", Business_Info[i][business_IntWorld]);
 			cache_get_value_int(i, "ext_interior", Business_Info[i][business_ExtInterior]);
 			cache_get_value_int(i, "ext_world", Business_Info[i][business_ExtWorld]);
+
+			switch (Business_Info[i][business_type])
+			{
+				case BUSINESS_MECHANIC:
+				{
+					cache_get_value_float(i, "repairX", Business_Info[i][mechanic_repairX]);
+					cache_get_value_float(i, "repairY", Business_Info[i][mechanic_repairY]);
+					cache_get_value_float(i, "repairZ", Business_Info[i][mechanic_repairZ]);
+					cache_get_value_int(i, "repair_interior", Business_Info[i][mechanic_interior]);
+					cache_get_value_int(i, "repair_world", Business_Info[i][mechanic_world]);
+
+					cache_get_value_int(i, "price_repair", Business_Info[i][mechanic_price_repair]);
+					cache_get_value_int(i, "price_colour", Business_Info[i][mechanic_price_colour]);
+					cache_get_value_int(i, "price_gas", Business_Info[i][mechanic_price_gas]);
+					cache_get_value_int(i, "price_oil", Business_Info[i][mechanic_price_oil]);
+				}	
+				/*
+				case BUSINESS_CARDEALER: text = "Concesionario";
+				case BUSINESS_LICENCES: text = "Licenciero";
+				case BUSINESS_SECURITY: text = "Seguridad";
+				case BUSINESS_NEWSLETTER: text = "Periódico";
+				case BUSINESS_FUNERAL: text = "Funeraria";
+				case BUSINESS_ASEGURADOR: text = "Aseguradora";*/
+			}
+
 			Business_Info[i][business_valid] = true;
 
 			UpdateBusinessLabel(i, true);
@@ -87,6 +113,7 @@ public LoadBusiness()
 		}
 		printf("Total business loaded: %d.", total_business);
 	}
+	print("UWU");
 	return 1;
 }
 
@@ -97,7 +124,7 @@ public OnBusinessInsert(business)
 	return 1;
 }
 
-// â€”â€” OnGameModeInitS
+// —— OnGameModeInitS
 SearchFreeBusinessID()
 {
 	new id = INVALID_BUSINESS_ID;
@@ -117,11 +144,11 @@ GetBusinessType(type)
 	new text[30];
 	switch (type)
 	{
-		case BUSINESS_MECHANIC: text = "Taller mecÃ¡nico";
+		case BUSINESS_MECHANIC: text = "Taller mecánico";
 		case BUSINESS_CARDEALER: text = "Concesionario";
 		case BUSINESS_LICENCES: text = "Licenciero";
 		case BUSINESS_SECURITY: text = "Seguridad";
-		case BUSINESS_NEWSLETTER: text = "PeriÃ³dico";
+		case BUSINESS_NEWSLETTER: text = "Periódico";
 		case BUSINESS_FUNERAL: text = "Funeraria";
 		case BUSINESS_ASEGURADOR: text = "Aseguradora";
 		default: text = "No especificado";
@@ -132,7 +159,7 @@ GetBusinessType(type)
 UpdateBusinessLabel(business, bool:destroy = false)
 {
 
-	// â€” desbug
+	// — desbug
 	if (Business_Info[business][business_type] != BUSINESS_MECHANIC && IsValidDynamic3DTextLabel(Business_Info[business][mechanic_label]))
 		DestroyDynamic3DTextLabel(Business_Info[business][mechanic_label]);
 
@@ -162,8 +189,8 @@ UpdateBusinessLabel(business, bool:destroy = false)
 			20.0, .worldid = Business_Info[business][business_IntWorld], .interiorid = Business_Info[business][business_IntInterior]
 		);	
 
-		// â€”â€” USO DE STREAMER PARA GUARDAR ID Y TIPO DE PICKUP
-		// â€” Pickup interior
+		// —— USO DE STREAMER PARA GUARDAR ID Y TIPO DE PICKUP
+		// — Pickup interior
 		new tmp_interiorbizz, tmp_infointerior[2];
 		tmp_interiorbizz = CreateDynamicPickup(0, 1, Business_Info[business][business_IntX], Business_Info[business][business_IntY], Business_Info[business][business_IntZ] + 0.2,
 	 	Business_Info[business][business_IntWorld], Business_Info[business][business_IntInterior]);
@@ -172,7 +199,7 @@ UpdateBusinessLabel(business, bool:destroy = false)
 		tmp_infointerior[1] = business;
 		Streamer_SetArrayData(STREAMER_TYPE_PICKUP, tmp_interiorbizz, E_STREAMER_EXTRA_ID, tmp_infointerior);
 
-		// â€” Pickup Exterior
+		// — Pickup Exterior
 		new tmp_exteriorbizz, tmp_infoexterior[2];
 		tmp_exteriorbizz = CreateDynamicPickup(0, 1, Business_Info[business][business_ExtX], Business_Info[business][business_ExtY], Business_Info[business][business_ExtZ] + 0.2,
 	 	Business_Info[business][business_ExtWorld], Business_Info[business][business_ExtInterior]);
@@ -196,14 +223,14 @@ UpdateBusinessLabel(business, bool:destroy = false)
 
 CreateBusiness(business)
 {
-	static sql_query[128];
-	mysql_format(handle_business, sql_query, sizeof sql_query, 
-		"INSERT INTO business (ext_x, ext_y, ext_Z, ext_interior, ext_world, price) VALUES (%f, %f, %f, %d, %d, %d, %d)", 
-		Business_Info[business][business_ExtX], Business_Info[business][business_ExtY], Business_Info[business][business_ExtZ],
-		Business_Info[business][business_ExtInterior], Business_Info[business][business_ExtWorld], Business_Info[business][business_price]
-	);
-
-	mysql_tquery(handle_business, sql_query, "OnBusinessInsert", "d", business);
+	new query[150];
+	mysql_format(handle_business, query, sizeof query, 
+		"INSERT INTO business (price, ext_x, ext_y, ext_z, ext_interior, ext_world) VALUES (%d, %f, %f, %f, %d, %d)",
+		Business_Info[business][business_price], Business_Info[business][business_ExtX],	Business_Info[business][business_ExtY],	Business_Info[business][business_ExtZ],	
+		Business_Info[business][business_ExtInterior], Business_Info[business][business_ExtWorld]);
+	
+	print(query);
+	mysql_tquery(handle_business, query, "OnBusinessInsert", "d", business);
 	return 1;
 }
 

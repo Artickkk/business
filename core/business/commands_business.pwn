@@ -1,7 +1,7 @@
-// â€”â€” CREDITOS
-// â€” Artic, 19/Abril
+// —— CREDITOS
+// — Artic, 19/Abril
 
-// â€”â€” ADMINISTRATIVOS
+// —— ADMINISTRATIVOS
 CMD:adminempresa(playerid, params[])
 {
 	if (sscanf(params, "s[32]", params)) 
@@ -34,10 +34,10 @@ CMD:adminempresa(playerid, params[])
 			return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa borrar [ID]");
 
 		if (business > total_business)
-			return SendClientMessage(playerid, 0x942B15FF, "ID invÃ¡lida");
+			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");
 
 		if (!Business_Info[business][business_valid])
-			return SendClientMessage(playerid, 0x942B15FF, "ID invÃ¡lida");			
+			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");			
 
 		DestroyBusiness(business);
 		new string[80];
@@ -51,10 +51,10 @@ CMD:adminempresa(playerid, params[])
 			return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] [Exterior - interior - precio - tipo]");	
 
 		if (business > total_business)
-			return SendClientMessage(playerid, 0x942B15FF, "ID invÃ¡lida");
+			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");
 
 		if (!Business_Info[business][business_valid])
-			return SendClientMessage(playerid, 0x942B15FF, "ID invÃ¡lida");			
+			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");			
 
 		if (!strcmp(type_s, "interior", true, 8))
 		{
@@ -97,13 +97,13 @@ CMD:adminempresa(playerid, params[])
 		{
 			new type;
 			if (sscanf(type_s, "s[6]i", type_s, type)) 
-				return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] tipo [nÃºmero (/tiposempresa)]");				
+				return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] tipo [número (/tiposempresa)]");				
 
 			if (type > BUSINESS_ASEGURADOR)
-				return SendClientMessage(playerid, 0x942B15FF, "NÃºmero muy grande.");
+				return SendClientMessage(playerid, 0x942B15FF, "Número muy grande.");
 
 			if (type < BUSINESS_MECHANIC)
-				return SendClientMessage(playerid, 0x942B15FF, "NÃºmero muy pequeÃ±o.");
+				return SendClientMessage(playerid, 0x942B15FF, "Número muy pequeño.");
 
 			Business_Info[business][business_type] = type;
 			UpdateBusinessLabel(business);
@@ -120,12 +120,12 @@ CMD:adminempresa(playerid, params[])
 
 CMD:tiposempresa(playerid)
 {
-	// â€” iteraciÃ³n sobre el enum, para automatizar segÃºn la cantidad de tipos.
+	// — iteración sobre el enum, para automatizar según la cantidad de tipos.
 	new str[20], totalstr[144];
 	SendClientMessage(playerid, 0xD9D361FF, "TIPOS DE EMPRESAS");
 	for (new i = 1; i < BUSINESS_INVALID; i++) 
 	{
-		format(str, sizeof str, "â€” %d. %s ", i, GetBusinessType(i));
+		format(str, sizeof str, "— %d. %s ", i, GetBusinessType(i));
 		strcat(totalstr, str);
 	}
 	SendClientMessage(playerid, 0xD9D361FF, totalstr);
@@ -134,10 +134,10 @@ CMD:tiposempresa(playerid)
 
 CMD:empresas(playerid)
 {
-	new totalstr[512], string[30], count = 0;
+	new totalstr[2048], string[80], count = 0;
 	for (new i; i < total_business; i++) if (Business_Info[i][business_valid])
 	{
-		format(string, sizeof string, "%d\t%s\t%s\n", i, GetBusinessType(Business_Info[i][business_type]), (Business_Info[i][business_owner]) ? ("Comprada") : ("En venta"));
+		format(string, sizeof string, "{C0C0C0}(%d) %s\t%s\n", i, GetBusinessType(Business_Info[i][business_type]), (Business_Info[i][business_owner]) ? ("{E81700}Comprada") : ("{54C822}En venta"));
 		strcat(totalstr, string);
 		count++;
 	}
@@ -152,18 +152,14 @@ CMD:empresas(playerid)
 	return 1;
 }
 
-// â€”â€” GENERALES
+// —— GENERALES
 CMD:entrar(playerid)
 {
 	new info_bizz[2];
 	Streamer_GetArrayData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_EXTRA_ID, info_bizz);
 
-	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_EXTERIOR_BIZZ) // â€” Tiene k estar en el exterior
-	{
-		print("DEBUG: PICKUP NONE BIZZ");
-		SendClientMessage(playerid, -1, "DEBUG: PICKUP NONE BIZZ");
+	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_EXTERIOR_BIZZ) // — Tiene k estar en el exterior
 		return 1;
-	}
 
 	new Float:bizzX, Float:bizzY, Float:bizzZ;
 	Streamer_GetFloatData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_X, bizzX);
@@ -186,12 +182,8 @@ CMD:salir(playerid)
 	new info_bizz[2];
 	Streamer_GetArrayData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_EXTRA_ID, info_bizz);
 
-	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_INTERIOR_BIZZ) // â€” Tiene k estar en interior
-	{
-		print("DEBUG: PICKUP NONE BIZZ");
-		SendClientMessage(playerid, -1, "DEBUG: PICKUP NONE BIZZ");
+	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_INTERIOR_BIZZ) // — Tiene k estar en interior
 		return 1;
-	}
 
 	new Float:bizzX, Float:bizzY, Float:bizzZ;
 	Streamer_GetFloatData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_X, bizzX);

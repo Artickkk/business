@@ -1,7 +1,7 @@
-// ‚Äî‚Äî CREDITOS
-// ‚Äî Artic, 21/Abril
+// óó CREDITOS
+// ó Artic, 21/Abril
 
-// ‚Äî LIMITES
+// ó LIMITES
 #define MAX_GAS_PRICE 5000
 #define MIN_GAS_PRICE 100
 
@@ -15,11 +15,11 @@
 #define MIN_COLOUR_PRICE 100
 
 
-// ‚Äî‚Äî FUNCIONES
+// óó FUNCIONES
 UpdateMechanicLabel(business, destroy = false)
 {
-	new string[30];
-	format(string, sizeof string, "Para reparar tu auto\nusa /reparar ($%d/L)", Business_Info[business][mechanic_price_gas]);
+	new string[50];
+	format(string, sizeof string, "Para reparar tu auto\nusa /reparar ($%d)", Business_Info[business][mechanic_price_repair]);
 
 	if (destroy)
 	{
@@ -33,7 +33,7 @@ UpdateMechanicLabel(business, destroy = false)
 			20.0, .worldid = Business_Info[business][mechanic_world], .interiorid = Business_Info[business][mechanic_interior]
 		);
 
-		// ‚Äî Uso del streamer
+		// ó Uso del streamer
 
 		new tmp_mechanic, tmp_infomechanic[2];
 		tmp_mechanic = CreateDynamicPickup(0, 1, Business_Info[business][mechanic_repairX], Business_Info[business][mechanic_repairY], Business_Info[business][mechanic_repairZ],
@@ -50,18 +50,18 @@ UpdateMechanicLabel(business, destroy = false)
 	return 1;
 }
 
-// ‚Äî‚Äî COMANDOS ADMINISTRATIVOS
+// óó COMANDOS ADMINISTRATIVOS
 CMD:editartaller(playerid, params[])
 {
-	new option[10], business;
-	if (sscanf(params, "s[32]is[12]", params, business, option)) 
- 		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /editartaller [ID] [Posicion - Precios (Pintura - Reparaci√≥n - Gasolina)]");	
+	new option[64], business;
+	if (sscanf(params, "is[64]", business, option)) 
+ 		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /editartaller [ID] [Posicion - Precios (Pintura - ReparaciÛn - Gasolina)]");	
 
  	if (business > total_business)
-		return SendClientMessage(playerid, 0x942B15FF, "ID inv√°lida");
+		return SendClientMessage(playerid, 0x942B15FF, "ID inv·lida");
 
 	if (!Business_Info[business][business_valid])
-		return SendClientMessage(playerid, 0x942B15FF, "ID inv√°lida");	
+		return SendClientMessage(playerid, 0x942B15FF, "ID inv·lida");	
 
 	if (Business_Info[business][business_type] != BUSINESS_MECHANIC)
 		return SendClientMessage(playerid, 0x942B15FF, "Este no es un taller.");
@@ -71,61 +71,61 @@ CMD:editartaller(playerid, params[])
 		GetPlayerPos(playerid, Business_Info[business][mechanic_repairX], Business_Info[business][mechanic_repairY], Business_Info[business][mechanic_repairZ]);
 		Business_Info[business][mechanic_world] = GetPlayerVirtualWorld(playerid);
 		Business_Info[business][mechanic_interior] = GetPlayerInterior(playerid);
-		UpdateMechanicLabel(business);
+		UpdateMechanicLabel(business, true);
 
 		new string[80];
-		format(string, sizeof string, "Editaste un taller mec√°nico. {D17145}(Posici√≥n de reparaci√≥n, ID: %d)", business);
+		format(string, sizeof string, "Editaste un taller mec·nico. {D17145}(PosiciÛn de reparaciÛn, ID: %d)", business);
 		SendClientMessage(playerid, 0xD1CCE7FF, string);
 	}
 
 	else if (!strcmp(option, "precios", true, 7) || !strcmp(option, "precio", true, 6))
 	{
-		new type[10], value;
-		if (sscanf(option, "s[6]s[10]i", option, type, value)) 
-			return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /editartaller [ID] Precio [Pintura - Reparaci√≥n - Gasolina] [Valor]");	
+		new type[32], value;
+		if (sscanf(option, "s[64]s[32]i", option, type, value)) 
+			return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /editartaller [ID] Precio [Pintura - ReparaciÛn - Gasolina] [Valor]");	
 
 		if (!strcmp(type, "gasolina", true, 7) || !strcmp(type, "gas", true, 3))
 		{
 			if (value > MAX_GAS_PRICE)
-				return SendClientMessage(playerid, 0x942B15FF, "El valor m√°ximo es de "MAX_GAS_PRICE"");
+				return SendClientMessage(playerid, 0x942B15FF, "El valor m·ximo es de "#MAX_GAS_PRICE"");
 
 			if (value < MIN_GAS_PRICE)
-				return SendClientMessage(playerid, 0x942B15FF, "El valor m√≠nimo es de "MIN_GAS_PRICE"");
+				return SendClientMessage(playerid, 0x942B15FF, "El valor mÌnimo es de "#MIN_GAS_PRICE" ");
 
 			Business_Info[business][mechanic_price_gas] = value;
 
 			new string[80];
-			format(string, sizeof string, "Editaste un taller mec√°nico. {D17145}(Precio gasolina: %d, ID: %d)", value, business);
+			format(string, sizeof string, "Editaste un taller mec·nico. {D17145}(Precio gasolina: %d, ID: %d)", value, business);
 			SendClientMessage(playerid, 0xD1CCE7FF, string);
 		}
 
 		else if (!strcmp(type, "pintura", true, 7))
 		{
 			if (value > MAX_COLOUR_PRICE)
-				return SendClientMessage(playerid, 0x942B15FF, "El valor m√°ximo es de "MAX_COLOUR_PRICE"");
+				return SendClientMessage(playerid, 0x942B15FF, "El valor m·ximo es de "#MAX_COLOUR_PRICE"");
 
 			if (value < MIN_COLOUR_PRICE)
-				return SendClientMessage(playerid, 0x942B15FF, "El valor m√≠nimo es de "MIN_COLOUR_PRICE"");
+				return SendClientMessage(playerid, 0x942B15FF, "El valor mÌnimo es de "#MIN_COLOUR_PRICE"");
 
 			Business_Info[business][mechanic_price_colour] = value;
 
 			new string[80];
-			format(string, sizeof string, "Editaste un taller mec√°nico. {D17145}(Precio pintura: %d, ID: %d)", value, business);
+			format(string, sizeof string, "Editaste un taller mec·nico. {D17145}(Precio pintura: %d, ID: %d)", value, business);
 			SendClientMessage(playerid, 0xD1CCE7FF, string);
 		}
 
 		else if (!strcmp(type, "reparacion", true, 10))
 		{
 			if (value > MAX_REPAIR_PRICE)
-				return SendClientMessage(playerid, 0x942B15FF, "El valor m√°ximo es de "MAX_REPAIR_PRICE"");
+				return SendClientMessage(playerid, 0x942B15FF, "El valor m·ximo es de "#MAX_REPAIR_PRICE"");
 
 			if (value < MIN_REPAIR_PRICE)
-				return SendClientMessage(playerid, 0x942B15FF, "El valor m√≠nimo es de "MIN_REPAIR_PRICE"");
+				return SendClientMessage(playerid, 0x942B15FF, "El valor mÌnimo es de "#MIN_REPAIR_PRICE"");
 
 			Business_Info[business][mechanic_price_repair] = value;
 
 			new string[80];
-			format(string, sizeof string, "Editaste un taller mec√°nico. {D17145}(Precio reparaci√≥n: %d, ID: %d)", value, business);
+			format(string, sizeof string, "Editaste un taller mec·nico. {D17145}(Precio reparaciÛn: %d, ID: %d)", value, business);
 			SendClientMessage(playerid, 0xD1CCE7FF, string);
 			UpdateMechanicLabel(business);
 		}
@@ -133,13 +133,28 @@ CMD:editartaller(playerid, params[])
 	return 1;
 }
 
-// ‚Äî‚Äî COMANDOS GENERALES
+// óó COMANDOS GENERALES
+CMD:mipickup(playerid)
+{
+	new tmp_mechanic[2];
+	Streamer_GetArrayData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_EXTRA_ID, tmp_mechanic);
+
+	switch (tmp_mechanic[0])
+	{
+		case PICKUP_NONE_BIZZ: SendClientMessage(playerid, -1, "ninguno");
+		case PICKUP_INTERIOR_BIZZ: SendClientMessage(playerid, -1, "interior");
+		case PICKUP_EXTERIOR_BIZZ: SendClientMessage(playerid, -1, "exterior");
+		case PICKUP_SHOP_BIZZ: SendClientMessage(playerid, -1, "shop");
+		case PICKUP_REPAIR_MECHANIC: SendClientMessage(playerid, -1, "reparacion");
+	}
+	return 1;	
+}
 CMD:reparar(playerid)
 {
 	new tmp_mechanic[2];
 	Streamer_GetArrayData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_EXTRA_ID, tmp_mechanic);
 
-	if (tmp_mechanic[0] == PICKUP_NONE_BIZZ || tmp_mechanic[0] != PICKUP_REPAIR_MECHANIC) // ‚Äî Tiene k estar en un taller
+	if (tmp_mechanic[0] == PICKUP_NONE_BIZZ || tmp_mechanic[0] != PICKUP_REPAIR_MECHANIC) // ó Tiene k estar en un taller
 		return 1;
 
 	new Float:mechanicX, Float:mechanicY, Float:mechanicZ;
@@ -152,11 +167,30 @@ CMD:reparar(playerid)
 	if (!IsPlayerInRangeOfPoint(playerid, 5.0, mechanicX, mechanicY, mechanicZ) && GetPlayerInterior(playerid) != mechanicVW && GetPlayerVirtualWorld(playerid) != mechanicINT)
 		return 1;
 
-	if (!strcmp(option, "posicion", true, 8))
+	new vehicleid = GetPlayerVehicleID(playerid);
+	if (vehicleid == INVALID_VEHICLE_ID)
+		return 1;
+
+	new Float:health;
+	GetVehicleHealth(vehicleid, health);
+	if (health > 800.0)
+		return SendClientMessage(playerid, 0x9D2121FF, "El estado del vehÌculo es muy alto.");
+
+	new msg[80];
+	if (GetPlayerMoney(playerid) < Business_Info[tmp_mechanic[1]][mechanic_price_repair])
 	{
-		GetPlayerPos(playerid, Business_Info[business][mechanic_repairX], Business_Info[business][mechanic_repairY], Business_Info[business][mechanic_repairZ]);
-		Business_Info[business][mechanic_world] = GetPlayerVirtualWorld(playerid);
-		Business_Info[business][mechanic_interior] = GetPlayerInterior(playerid);
-	}	
+		format(msg, sizeof msg, "El precio para reparar ac· es de $%d.", Business_Info[tmp_mechanic[1]][mechanic_price_repair]);
+		return SendClientMessage(playerid, -1, msg);
+	}
+
+	GivePlayerMoney(playerid, -Business_Info[tmp_mechanic[1]][mechanic_price_repair]);
+	Business_Info[tmp_mechanic[1]][business_money] += Business_Info[tmp_mechanic[1]][mechanic_price_repair];
+
+	format(msg, sizeof msg, "Gastaste $%d para reparar tu auto.", Business_Info[tmp_mechanic[1]][mechanic_price_repair]);
+
+
+	new Float:health_new = health + 100.0;
+	SetVehicleHealth(vehicleid, health_new);
+	if(health_new >= 1000.0) RepairVehicle(vehicleid);
 	return 1;
 }
