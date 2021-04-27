@@ -12,7 +12,7 @@ public OnGameModeInit()
 		return 1;
 	}
 
-	print("conexion hecha");
+	print("Connection is ok (Business)");
 	mysql_tquery(handle_business, "SELECT * FROM business", "LoadBusiness");
 
 	#if defined bizz_OnGameModeInit
@@ -82,6 +82,8 @@ public LoadBusiness()
 			cache_get_value_int(i, "ext_interior", Business_Info[i][business_ExtInterior]);
 			cache_get_value_int(i, "ext_world", Business_Info[i][business_ExtWorld]);
 
+			cache_get_value_int(i, "mapicon", Business_Info[i][business_iconid]);
+
 			switch (Business_Info[i][business_type])
 			{
 				case BUSINESS_MECHANIC:
@@ -96,6 +98,7 @@ public LoadBusiness()
 					cache_get_value_int(i, "price_colour", Business_Info[i][mechanic_price_colour]);
 					cache_get_value_int(i, "price_gas", Business_Info[i][mechanic_price_gas]);
 					cache_get_value_int(i, "price_oil", Business_Info[i][mechanic_price_oil]);
+					UpdateMechanicLabel(i);
 				}	
 				/*
 				case BUSINESS_CARDEALER: text = "Concesionario";
@@ -113,7 +116,6 @@ public LoadBusiness()
 		}
 		printf("Total business loaded: %d.", total_business);
 	}
-	print("UWU");
 	return 1;
 }
 
@@ -189,6 +191,17 @@ UpdateBusinessLabel(business, bool:destroy = false)
 			20.0, .worldid = Business_Info[business][business_IntWorld], .interiorid = Business_Info[business][business_IntInterior]
 		);	
 
+		if (IsValidDynamicMapIcon(Business_Info[business][business_mapicon]))
+			DestroyDynamicMapIcon(Business_Info[business][business_mapicon]);
+
+		if (Business_Info[business][business_iconid] != 0)
+		{
+			Business_Info[business][business_mapicon] = CreateDynamicMapIcon(
+				Business_Info[business][business_IntX], Business_Info[business][business_IntY], Business_Info[business][business_IntZ], 
+				Business_Info[business][business_iconid], 0, 0, 0, -1, 300
+			);
+		}
+
 		// —— USO DE STREAMER PARA GUARDAR ID Y TIPO DE PICKUP
 		// — Pickup interior
 		new tmp_interiorbizz, tmp_infointerior[2];
@@ -247,6 +260,10 @@ SetBusinessDefaultValues(business)
 
 DestroyBusiness(business)
 {
+	new query[80];
+	mysql_format(handle_business, query, sizeof query, "DELETE FROM business WHERE ID = %d", Business_Info[business][business_ID]);
+	mysql_tquery(handle_business, query);
+
 	if (IsValidDynamic3DTextLabel(Business_Info[business][business_ExtLabel]))
 		DestroyDynamic3DTextLabel(Business_Info[business][business_ExtLabel]);
 
@@ -262,6 +279,11 @@ DestroyBusiness(business)
 	if (IsValidDynamic3DTextLabel(Business_Info[business][mechanic_label]))
 		DestroyDynamic3DTextLabel(Business_Info[business][mechanic_label]);
 
-	Business_Info[business][business_valid] = false;
+	new clean_business[business_info];
+	Business_Info[business] = clean_business;
+
+	Business_Info[business][business_ExtLabel] = Text3D:INVALID_3DTEXT_ID;
+	Business_Info[business][business_IntLabel] = Text3D:INVALID_3DTEXT_ID;
+	Business_Info[business][mechanic_label] = Text3D:INVALID_3DTEXT_ID;
 	return 1;
 }

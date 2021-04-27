@@ -6,6 +6,15 @@
 #define INVALID_BUSINESS_ID -1
 
 // —— ENUM
+enum
+{
+	DIALOG_NONE = 0, 
+	DIALOG_BUSINESS,
+	DIALOG_MECHANIC_MENU,
+	DIALOG_COLOR_ONE,
+	DIALOG_COLOR_TWO
+}
+
 enum 
 {
 	BUSINESS_NONE,
@@ -42,6 +51,9 @@ enum business_info
 	business_money,								// — Dinero en caja fuerte
 	business_sold,								// — Vendido o no
 	business_price,								// — Precio de la venta
+	// — Map icon
+	business_mapicon,							// — ID mapicon
+	business_iconid,							// — tipo mapicon
 	// — Posiciones
 	Float:business_IntX,						// — Coordenada Interior de X
 	Float:business_IntY,						// — Coordenada Interior de Y
