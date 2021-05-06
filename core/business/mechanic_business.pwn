@@ -72,21 +72,24 @@ UpdateMechanicLabel(business)
 	return 1;
 }
 
-// —— COMANDOS ADMINISTRATIVOS
 CMD:editartaller(playerid, params[])
 {
-	new option[64], business;
-	if (sscanf(params, "is[64]", business, option)) 
- 		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /editartaller [ID] [Posicion - Precios (Pintura - Reparación - Gasolina)]");	
-
- 	if (business > total_business)
-		return SendClientMessage(playerid, 0x942B15FF, "ID inválida");
+	new business = GetPlayerBusiness(playerid);
+	if (business == INVALID_BUSINESS_ID)
+		return SendClientMessage(playerid, 0x942B15FF, "Negocio inválido");
 
 	if (!Business_Info[business][business_valid])
-		return SendClientMessage(playerid, 0x942B15FF, "ID inválida");	
+		return SendClientMessage(playerid, 0x942B15FF, "Negocio inválido");
+
+	if (!IsPlayerOwner(playerid, business))
+		return SendClientMessage(playerid, 0x942B15FF, "No eres dueño de la empresa.");
 
 	if (Business_Info[business][business_type] != BUSINESS_MECHANIC)
 		return SendClientMessage(playerid, 0x942B15FF, "Este no es un taller.");
+
+	new option[64];
+	if (sscanf(params, "s[64]", option)) 
+ 		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /editartaller [Posicion - Cobrar - Precios (Pintura - Reparación - Gasolina)]");	
 
 	if (!strcmp(option, "posicion", true, 8))
 	{
@@ -104,6 +107,14 @@ CMD:editartaller(playerid, params[])
 
 		new string[80];
 		format(string, sizeof string, "Editaste un taller mecánico. {D17145}(Posición de reparación, ID: %d)", business);
+		SendClientMessage(playerid, 0xD1CCE7FF, string);
+	}
+
+	else if (!strcmp(option, "cobrar", true, 6))
+	{
+		Business_Info[business][mechanic_charge] = !Business_Info[business][mechanic_charge];
+		new string[90];
+		format(string, sizeof string, "Editaste tu taller. {D17145}(%s, ID: %d)", Business_Info[business][mechanic_charge] ? ("Cobrar (/taller)") : ("No cobrar (/taller"), business);
 		SendClientMessage(playerid, 0xD1CCE7FF, string);
 	}
 
@@ -197,20 +208,23 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 							mechanic = TempBusiness[playerid][tmechanic_taller]
 						;
 
-						if (GetPlayerMoney(playerid) < Business_Info[mechanic][mechanic_price_repair])
+						if (Business_Info[mechanic][mechanic_charge])
 						{
-							format(msg, sizeof msg, "El precio para reparar acá es de $%d.", Business_Info[mechanic][mechanic_price_repair]);
-							return SendClientMessage(playerid, -1, msg);
+							if (GetPlayerMoney(playerid) < Business_Info[mechanic][mechanic_price_repair])
+							{
+								format(msg, sizeof msg, "El precio para reparar acá es de $%d.", Business_Info[mechanic][mechanic_price_repair]);
+								return SendClientMessage(playerid, -1, msg);
+							}
+
+							GivePlayerMoney(playerid, -Business_Info[mechanic][mechanic_price_repair]);
+							Business_Info[mechanic][business_money] += Business_Info[mechanic][mechanic_price_repair];
+							new query[60];
+							mysql_format(handle_business, query, sizeof query, "UPDATE business SET money = %d WHERE ID = %d;", Business_Info[mechanic][business_money], Business_Info[mechanic][business_ID]);
+							mysql_tquery(handle_business, query);	
+
+							format(msg, sizeof msg, "Gastaste $%d para reparar tu auto.", Business_Info[mechanic][mechanic_price_repair]);
+							SendClientMessage(playerid, 0xC0C0C0FF, msg);
 						}
-
-						GivePlayerMoney(playerid, -Business_Info[mechanic][mechanic_price_repair]);
-						Business_Info[mechanic][business_money] += Business_Info[mechanic][mechanic_price_repair];
-						new query[60];
-						mysql_format(handle_business, query, sizeof query, "UPDATE business SET money = %d WHERE ID = %d;", Business_Info[mechanic][business_money], Business_Info[mechanic][business_ID]);
-						mysql_tquery(handle_business, query);	
-
-						format(msg, sizeof msg, "Gastaste $%d para reparar tu auto.", Business_Info[mechanic][mechanic_price_repair]);
-						SendClientMessage(playerid, 0xC0C0C0FF, msg);
 
 						SetVehicleHealth(vehicleid, 900.0);
 						RepairVehicle(vehicleid);
@@ -241,23 +255,25 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 					return SendClientMessage(playerid, 0x9D2121FF, "Color inválido.");
 
 				new string[80];
-				if (GetPlayerMoney(playerid) < Business_Info[TempBusiness[playerid][tmechanic_taller]][mechanic_price_colour])
-				{ 
-					format(string, sizeof string, "No tienes suficiente dinero ($%d).", Business_Info[TempBusiness[playerid][tmechanic_taller]][mechanic_price_colour]); 
-					SendClientMessage(playerid, 0xC0C0C0FF, string); 
-					return 1; 
+				if (Business_Info[TempBusiness[playerid][tmechanic_taller]][mechanic_charge])
+				{
+					if (GetPlayerMoney(playerid) < Business_Info[TempBusiness[playerid][tmechanic_taller]][mechanic_price_colour])
+					{ 
+						format(string, sizeof string, "No tienes suficiente dinero ($%d).", Business_Info[TempBusiness[playerid][tmechanic_taller]][mechanic_price_colour]); 
+						SendClientMessage(playerid, 0xC0C0C0FF, string); 
+						return 1; 
+					}
+					GivePlayerMoney(playerid, -Business_Info[TempBusiness[playerid][tmechanic_taller]][mechanic_price_colour]);
+					Business_Info[TempBusiness[playerid][tmechanic_taller]][business_money] += Business_Info[TempBusiness[playerid][tmechanic_taller]][mechanic_price_colour];
+
+					new query[60];
+					mysql_format(handle_business, query, sizeof query, "UPDATE business SET money = %d WHERE ID = %d;", Business_Info[TempBusiness[playerid][tmechanic_taller]][business_money], Business_Info[TempBusiness[playerid][tmechanic_taller]][business_ID]);
+					mysql_tquery(handle_business, query);	
+
+					format(string, sizeof string, "Gastaste $%d para pintar tu auto.", Business_Info[TempBusiness[playerid][tmechanic_taller]][business_money]);
+					SendClientMessage(playerid, 0xC0C0C0FF, string);
 				}
 				ChangeVehicleColor(TempBusiness[playerid][tmechanic_vehid], TempBusiness[playerid][tmechanic_color_one], color);
-				GivePlayerMoney(playerid, -Business_Info[TempBusiness[playerid][tmechanic_taller]][mechanic_price_colour]);
-				Business_Info[TempBusiness[playerid][tmechanic_taller]][business_money] += Business_Info[TempBusiness[playerid][tmechanic_taller]][mechanic_price_colour];
-
-				new query[60];
-				mysql_format(handle_business, query, sizeof query, "UPDATE business SET money = %d WHERE ID = %d;", Business_Info[TempBusiness[playerid][tmechanic_taller]][business_money], Business_Info[TempBusiness[playerid][tmechanic_taller]][business_ID]);
-				mysql_tquery(handle_business, query);	
-
-				format(string, sizeof string, "Gastaste $%d para pintar tu auto.", Business_Info[TempBusiness[playerid][tmechanic_taller]][business_money]);
-				SendClientMessage(playerid, 0xC0C0C0FF, string);
-
 			}
 		}
 	}
@@ -292,6 +308,12 @@ CMD:taller(playerid)
 	if (mechanic == INVALID_BUSINESS_ID)
 		return 1;
 
+	if (Business_Info[mechanic][business_type] != BUSINESS_MECHANIC)
+		return SendClientMessage(playerid, 0x942B15FF, "Este no es un taller.");
+
+	if (GetPlayerBusiness(playerid) != mechanic)
+		return SendClientMessage(playerid, 0x942B15FF, "No eres empleado de este taller.");
+
 	if (GetPlayerState(playerid) != PLAYER_STATE_DRIVER)
 		return 1;
 
@@ -300,7 +322,8 @@ CMD:taller(playerid)
 
 	new str[512];
 	format(str, sizeof str, 
-		"{C0C0C0}Reparación\t{54C822}$%d\n\
+		"Opcion\tPrecio establecido\n\
+		{C0C0C0}Reparación\t{54C822}$%d\n\
 		{C0C0C0}Pintura\t{54C822}$%d\n\
 		{C0C0C0}Gasolina\t{54C822}$%d", 
 		Business_Info[mechanic][mechanic_price_repair], Business_Info[mechanic][mechanic_price_colour], Business_Info[mechanic][mechanic_price_gas]
@@ -309,7 +332,7 @@ CMD:taller(playerid)
 	#if defined _easyDialog_included
 		Dialog_Show(playerid, ShowBusiness, DIALOG_STYLE_TABLIST, "Taller", str, "Aceptar", "");
 	#else
-		ShowPlayerDialog(playerid, DIALOG_MECHANIC_MENU, DIALOG_STYLE_TABLIST, "Taller", str, "Aceptar", "Cancelar");
+		ShowPlayerDialog(playerid, DIALOG_MECHANIC_MENU, DIALOG_STYLE_TABLIST_HEADERS, "Taller", str, "Aceptar", "Cancelar");
 	#endif 
 
 	return 1;

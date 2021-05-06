@@ -4,6 +4,9 @@
 // —— ADMINISTRATIVOS
 CMD:adminempresa(playerid, params[])
 {
+	if (!IsPlayerAdmin(playerid))
+		return 0;
+
 	if (sscanf(params, "s[32]", params)) 
 		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa [crear - borrar - editar]");
 
@@ -155,8 +158,11 @@ CMD:adminempresa(playerid, params[])
 
 CMD:tiposempresa(playerid)
 {
+	if (!IsPlayerAdmin(playerid))
+		return 0;
+
 	// — iteración sobre el enum, para automatizar según la cantidad de tipos.
-	new str[25], totalstr[144];
+	new str[30], totalstr[144];
 	SendClientMessage(playerid, 0xD9D361FF, "TIPOS DE EMPRESAS");
 	for (new i = 1; i < BUSINESS_INVALID; i++) 
 	{
@@ -170,10 +176,13 @@ CMD:tiposempresa(playerid)
 CMD:empresas(playerid)
 {
 	new totalstr[2048], string[80], count = 0;
+	for(new i = 0; i < MAX_BUSINESS; i++ ) TempBusiness[playerid][tbusiness_listitem][i] = -1;
+
 	for (new i; i < total_business; i++) if (Business_Info[i][business_valid])
 	{
 		format(string, sizeof string, "{C0C0C0}(%d) %s\t%s\n", i, GetBusinessType(Business_Info[i][business_type]), (Business_Info[i][business_owner]) ? ("{E81700}Comprada") : ("{54C822}En venta"));
 		strcat(totalstr, string);
+		TempBusiness[playerid][tbusiness_listitem][count] = i;
 		count++;
 	}
 	if (!count)

@@ -5,6 +5,8 @@
 #define MAX_BUSINESS 50
 #define INVALID_BUSINESS_ID -1
 
+#define DESBUG_PLAYER_BUSINESS
+
 // —— ENUM
 enum
 {
@@ -87,7 +89,10 @@ enum business_info
 	mechanic_price_repair,						// — Precio de reparación
 	mechanic_price_colour,						// — Precio de pintura
 	mechanic_price_gas,							// — Precio de gasolina
-	mechanic_price_oil							// — Precio de aceite
+	mechanic_price_oil,							// — Precio de aceite
+	bool:mechanic_charge,							// — Cobrar al usar el /taller
+	// —— EMPLEADOS
+	business_maxranks,
 }
 new Business_Info[MAX_BUSINESS][business_info];
 
@@ -96,6 +101,23 @@ new
 	MySQL:handle_business,
 	total_business
 ;
+
+// —— DEFINES 
+#if defined DESBUG_PLAYER_BUSINESS
+	#define GetPlayerBusiness(%0) PlayerBusiness[%0][player_employee]
+	#define IsPlayerOwner(%0,%1) (PlayerBusiness[%0][player_rank] == Business_Info[%1][business_maxranks])
+#else
+	#define GetPlayerBusiness(%0) IsPlayerAdmin(%0)
+	#define IsPlayerOwner(%0) IsPlayerAdmin(%0)
+#endif
+/*
+DESBUG_PLAYER_BUSINESS definido para crear un enum de jugador, puede causar bugs con el enum principal, es necesario
+adaptarlo.
+
+Se verifica el ser Administrador RCON de manera temporal, puesto a que no se tiene en estos módulos
+la información del jugador (Enum), por lo que hacer un enum aparte tendría poco sentido; además de tener
+que incluir un nuevo guardado de datos, que podría interferir con el guardado principal (gamemode)
+*/
 
 // —— MÓDULOS
 // — General
