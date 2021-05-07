@@ -1,7 +1,7 @@
-// —— CREDITOS
-// — Artic, 19/Abril
+// â€”â€” CREDITOS
+// â€” Artic, 19/Abril
 
-// —— ADMINISTRATIVOS
+// â€”â€” ADMINISTRATIVOS
 CMD:adminempresa(playerid, params[])
 {
 	if (!IsPlayerAdmin(playerid))
@@ -39,10 +39,10 @@ CMD:adminempresa(playerid, params[])
 			return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa borrar [ID]");
 
 		if (business > total_business)
-			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");
+			return SendClientMessage(playerid, 0x942B15FF, "ID invÃ¡lida");
 
 		if (!Business_Info[business][business_valid])
-			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");			
+			return SendClientMessage(playerid, 0x942B15FF, "ID invÃ¡lida");			
 
 		DestroyBusiness(business);
 		new string[80];
@@ -56,10 +56,10 @@ CMD:adminempresa(playerid, params[])
 			return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] [Exterior - interior - precio - tipo - mapicon]");	
 
 		if (business > total_business)
-			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");
+			return SendClientMessage(playerid, 0x942B15FF, "ID invÃ¡lida");
 
 		if (!Business_Info[business][business_valid])
-			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");			
+			return SendClientMessage(playerid, 0x942B15FF, "ID invÃ¡lida");			
 
 		if (!strcmp(type_s, "interior", true, 8))
 		{
@@ -119,13 +119,13 @@ CMD:adminempresa(playerid, params[])
 		{
 			new type;
 			if (sscanf(type_s, "s[6]i", type_s, type)) 
-				return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] tipo [número (/tiposempresa)]");				
+				return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] tipo [nÃºmero (/tiposempresa)]");				
 
 			if (type > BUSINESS_ASEGURADOR)
-				return SendClientMessage(playerid, 0x942B15FF, "Número muy grande.");
+				return SendClientMessage(playerid, 0x942B15FF, "NÃºmero muy grande.");
 
 			if (type < BUSINESS_MECHANIC)
-				return SendClientMessage(playerid, 0x942B15FF, "Número muy pequeño.");
+				return SendClientMessage(playerid, 0x942B15FF, "NÃºmero muy pequeÃ±o.");
 
 			Business_Info[business][business_type] = type;
 			new query[60];
@@ -142,7 +142,7 @@ CMD:adminempresa(playerid, params[])
 		{
 			new mapicon;
 			if (sscanf(type_s, "s[10]i", type_s, mapicon))
-				return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] mapicon [número]");
+				return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] mapicon [nÃºmero]");
 
 			Business_Info[business][business_iconid] = mapicon;
 			new query[60];
@@ -161,12 +161,12 @@ CMD:tiposempresa(playerid)
 	if (!IsPlayerAdmin(playerid))
 		return 0;
 
-	// — iteración sobre el enum, para automatizar según la cantidad de tipos.
+	// â€” iteraciÃ³n sobre el enum, para automatizar segÃºn la cantidad de tipos.
 	new str[30], totalstr[144];
 	SendClientMessage(playerid, 0xD9D361FF, "TIPOS DE EMPRESAS");
 	for (new i = 1; i < BUSINESS_INVALID; i++) 
 	{
-		format(str, sizeof str, "— %d. %s ", i, GetBusinessType(i));
+		format(str, sizeof str, "â€” %d. %s ", i, GetBusinessType(i));
 		strcat(totalstr, str);
 	}
 	SendClientMessage(playerid, 0xD9D361FF, totalstr);
@@ -196,13 +196,76 @@ CMD:empresas(playerid)
 	return 1;
 }
 
-// —— GENERALES
+// â€”â€” LIDER
+CMD:invitar(playerid, params[])
+{
+	new business = GetPlayerBusiness(playerid);
+
+	if (business == INVALID_BUSINESS_ID)
+		return 1;
+
+	if (!IsPlayerOwner(playerid, business))
+		return 1;
+
+	if (sscanf(params, "ui", params[0], params[1]))
+		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /invitar (playerid)");
+
+	if (!IsPlayerConnected(params[0]) || params[0] == playerid)
+		return SendClientMessage(playerid, 0x9D2121FF, "Jugador invÃ¡lido.");
+
+	if (GetPlayerBusiness(params[0]) != INVALID_BUSINESS_ID)
+		return SendClientMessage(playerid, 0x9D2121FF, "El jugador ya trabaja para una empresa.");
+
+	PlayerBusiness[params[0]][player_rank] = 1;
+	PlayerBusiness[params[0]][player_employee] = business;
+
+	return 1;
+}
+
+CMD:darcargo(playerid, params[])
+{
+	new business = GetPlayerBusiness(playerid);
+
+	if (business == INVALID_BUSINESS_ID)
+		return 1;
+
+	if (!IsPlayerOwner(playerid, business))
+		return 1;
+
+	if (sscanf(params, "ui", params[0], params[1]))
+		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /darcargo (playerid) (rango)");
+
+	if (!IsPlayerConnected(params[0]) || params[0] == playerid)
+		return SendClientMessage(playerid, 0x9D2121FF, "Jugador invÃ¡lido.");
+
+	if (GetPlayerBusiness(params[0]) != business)
+		return SendClientMessage(playerid, 0x9D2121FF, "El jugador no trabaja para tÃ­.");
+
+	if (params[1] > Business_Info[business][business_maxranks])
+		return SendClientMessage(playerid, 0x9D2121FF, "Rango invÃ¡lido.");
+
+	if (params[1] == 0)
+	{
+		PlayerBusiness[params[0]][player_rank] = 0;
+		PlayerBusiness[params[0]][player_employee] = INVALID_BUSINESS_ID;
+		SendClientMessage(params[0], 0x9D2121FF, "Fuiste despedido.");
+	}
+	else
+	{
+		PlayerBusiness[params[0]][player_rank] = params[1];
+		SendClientMessage(params[0], 0xC0C0C0FF, "Te han dado otro cargo.");
+		SendClientMessage(playerid, 0xC0C0C0FF, "Asignaste un cargo a un empleado.");
+	}
+	return 1;
+}
+
+// â€”â€” GENERALES
 CMD:entrar(playerid)
 {
 	new info_bizz[2];
 	Streamer_GetArrayData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_EXTRA_ID, info_bizz);
 
-	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_EXTERIOR_BIZZ) // — Tiene k estar en el exterior
+	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_EXTERIOR_BIZZ) // â€” Tiene k estar en el exterior
 		return 1;
 
 	new Float:bizzX, Float:bizzY, Float:bizzZ;
@@ -229,7 +292,7 @@ CMD:salir(playerid)
 	new info_bizz[2];
 	Streamer_GetArrayData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_EXTRA_ID, info_bizz);
 
-	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_INTERIOR_BIZZ) // — Tiene k estar en interior
+	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_INTERIOR_BIZZ) // â€” Tiene k estar en interior
 		return 1;
 
 	new Float:bizzX, Float:bizzY, Float:bizzZ;

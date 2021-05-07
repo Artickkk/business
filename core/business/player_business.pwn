@@ -17,7 +17,8 @@ new TempBusiness[MAX_PLAYERS][temp_player_business];
 enum enum_player_business
 {
 	player_employee,
-	player_rank
+	player_rank,
+	player_name[MAX_PLAYER_NAME]
 }
 new PlayerBusiness[MAX_PLAYERS][enum_player_business];
 #endif 
@@ -55,13 +56,14 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 				return 0;
 
 			new business = TempBusiness[playerid][tbusiness_listitem][listitem];
-			
+			new totalstr[1024], str[128];
 			for (new i = 0, j = GetPlayerPoolSize(); i <= j; i++) if (IsPlayerConnected(i))
 			{
 				if (GetPlayerBusiness(i) != business)
 					continue;
 
-				strcat(, const source[], maxlength=sizeof dest)
+				format(str, sizeof str, "%d. %s (%s)", playerid);
+				strcat(totalstr, str);
 			}
 		}
 	}

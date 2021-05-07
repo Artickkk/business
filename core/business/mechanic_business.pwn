@@ -295,6 +295,44 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 #endif
 
 // —— COMANDOS GENERALES
+CMD:reparar(playerid, params[])
+{
+	new mechanic = GetPlayerBusiness(playerid);
+
+	if (mechanic == INVALID_BUSINESS_ID)
+		return 1;
+
+	if (Business_Info[mechanic][business_type] != BUSINESS_MECHANIC)
+		return 1;
+
+	if (sscanf(params, "ud", params[0], params[1]))
+		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /reparar [playerid] [precio]");	
+
+	if (!IsPlayerConnected(params[0]) || params[0] == playerid)
+		return SendClientMessage(playerid, 0x9D2121FF, "Jugador invalido.");
+
+	if (params[1] > Business_Info[mechanic][mechanic_price_repair] * 2)
+		return SendClientMessage(playerid, 0x9D2121FF, "Muy caro.");
+
+	if (GetPlayerMoney(params[0]) < params[1])
+		return SendClientMessage(playerid, 0x9D2121FF, "El cliente no tiene suficiente dinero.");
+
+	new vehicleid = GetPlayerVehicleID(params[0]);
+	if (vehicleid == INVALID_VEHICLE_ID)
+		return SendClientMessage(playerid, 0x9D2121FF, "El cliente debe estar en un auto.");
+
+	new Float:health;
+	GetVehicleHealth(vehicleid, health);
+
+	if (health > 900.0)
+		return SendClientMessage(playerid, 0x9D2121FF, "El estado del vehículo es muy bueno como para repararse.");	
+
+	GivePlayerMoney(params[0], -params[1]);
+	RepairVehicle(vehicleid);
+	SetVehicleHealth(vehicleid, 1000.0);
+	return 1;
+}
+
 CMD:taller(playerid)
 {
 	new mechanic = INVALID_BUSINESS_ID;
