@@ -66,6 +66,8 @@ public LoadBusiness()
 		{
 			cache_get_value_int(i, "ID", Business_Info[i][business_ID]);
 			cache_get_value_int(i, "type", Business_Info[i][business_type]);
+			SetBusinessRanks(i);
+
 			cache_get_value_int(i, "owner", Business_Info[i][business_owner]);
 			cache_get_value_int(i, "money", Business_Info[i][business_money]);
 			cache_get_value_int(i, "price", Business_Info[i][business_price]);
@@ -84,13 +86,22 @@ public LoadBusiness()
 
 			cache_get_value_int(i, "mapicon", Business_Info[i][business_iconid]);
 
+			new content[12];
+			for (new rank = 0; rank <= Business_Info[i][business_maxranks]; rank++)
+			{
+				format(content, sizeof content, "rank%d", rank);
+				cache_get_value_name(i, content, Business_Ranks[i][rank]);
+				print(content);
+				print(Business_Ranks[i][rank]);
+			}
+
 			switch (Business_Info[i][business_type])
 			{
 				case BUSINESS_MECHANIC:
 				{
-					cache_get_value_float(i, "repairX", Business_Info[i][mechanic_repairX]);
-					cache_get_value_float(i, "repairY", Business_Info[i][mechanic_repairY]);
-					cache_get_value_float(i, "repairZ", Business_Info[i][mechanic_repairZ]);
+					cache_get_value_float(i, "repair_x", Business_Info[i][mechanic_repairX]);
+					cache_get_value_float(i, "repair_y", Business_Info[i][mechanic_repairY]);
+					cache_get_value_float(i, "repair_z", Business_Info[i][mechanic_repairZ]);
 					cache_get_value_int(i, "repair_interior", Business_Info[i][mechanic_interior]);
 					cache_get_value_int(i, "repair_world", Business_Info[i][mechanic_world]);
 
@@ -158,6 +169,21 @@ GetBusinessType(type)
 	return text;
 }
 
+SetBusinessRanks(business)
+{
+	switch (Business_Info[business][business_type])
+	{
+		case BUSINESS_MECHANIC: Business_Info[business][business_maxranks] = 4;
+		case BUSINESS_CARDEALER: Business_Info[business][business_maxranks] = 2;
+		case BUSINESS_LICENCES: Business_Info[business][business_maxranks] = 2;
+		case BUSINESS_SECURITY: Business_Info[business][business_maxranks] = 2;
+		case BUSINESS_NEWSLETTER: Business_Info[business][business_maxranks] = 2;
+		case BUSINESS_FUNERAL: Business_Info[business][business_maxranks] = 2;
+		case BUSINESS_ASEGURADOR: Business_Info[business][business_maxranks] = 2;
+	}
+	return 1;
+}
+
 UpdateBusinessLabel(business, bool:destroy = false)
 {
 
@@ -182,14 +208,17 @@ UpdateBusinessLabel(business, bool:destroy = false)
 		if (IsValidDynamic3DTextLabel(Business_Info[business][business_IntLabel]))
 			DestroyDynamic3DTextLabel(Business_Info[business][business_IntLabel]);
 
-		string[0] = EOS;
-		format(string, sizeof string, "{00AE57}%s #%d\nSalida", GetBusinessType(Business_Info[business][business_type]), business);
-		Business_Info[business][business_IntLabel] =
-		CreateDynamic3DTextLabel(string, 
-			-1, 
-			Business_Info[business][business_IntX], Business_Info[business][business_IntY], Business_Info[business][business_IntZ], 
-			20.0, .worldid = Business_Info[business][business_IntWorld], .interiorid = Business_Info[business][business_IntInterior]
-		);	
+		if (Business_Info[business][business_IntX] != 0.0)
+		{
+			string[0] = EOS;
+			format(string, sizeof string, "{00AE57}%s #%d\nSalida", GetBusinessType(Business_Info[business][business_type]), business);
+			Business_Info[business][business_IntLabel] =
+			CreateDynamic3DTextLabel(string, 
+				-1, 
+				Business_Info[business][business_IntX], Business_Info[business][business_IntY], Business_Info[business][business_IntZ], 
+				20.0, .worldid = Business_Info[business][business_IntWorld], .interiorid = Business_Info[business][business_IntInterior]
+			);	
+		}
 
 		if (IsValidDynamicMapIcon(Business_Info[business][business_mapicon]))
 			DestroyDynamicMapIcon(Business_Info[business][business_mapicon]);
@@ -197,7 +226,7 @@ UpdateBusinessLabel(business, bool:destroy = false)
 		if (Business_Info[business][business_iconid] != 0)
 		{
 			Business_Info[business][business_mapicon] = CreateDynamicMapIcon(
-				Business_Info[business][business_IntX], Business_Info[business][business_IntY], Business_Info[business][business_IntZ], 
+				Business_Info[business][business_ExtX], Business_Info[business][business_ExtY], Business_Info[business][business_ExtZ], 
 				Business_Info[business][business_iconid], 0, 0, 0, -1, 300
 			);
 		}
@@ -240,9 +269,8 @@ CreateBusiness(business)
 	mysql_format(handle_business, query, sizeof query, 
 		"INSERT INTO business (price, ext_x, ext_y, ext_z, ext_interior, ext_world) VALUES (%d, %f, %f, %f, %d, %d)",
 		Business_Info[business][business_price], Business_Info[business][business_ExtX],	Business_Info[business][business_ExtY],	Business_Info[business][business_ExtZ],	
-		Business_Info[business][business_ExtInterior], Business_Info[business][business_ExtWorld]);
-	
-	print(query);
+		Business_Info[business][business_ExtInterior], Business_Info[business][business_ExtWorld]
+	);
 	mysql_tquery(handle_business, query, "OnBusinessInsert", "d", business);
 	return 1;
 }

@@ -3,6 +3,7 @@
 
 // —— DEFINES
 #define MAX_BUSINESS 50
+#define MAX_BUSINESS_RANKS 10
 #define INVALID_BUSINESS_ID -1
 
 #define DESBUG_PLAYER_BUSINESS
@@ -10,11 +11,12 @@
 // —— ENUM
 enum
 {
-	DIALOG_NONE = 0, 
+	DIALOG_DESBUG = 0,  // — Cambiar 0 Por la última ID disponible.
 	DIALOG_BUSINESS,
 	DIALOG_MECHANIC_MENU,
 	DIALOG_COLOR_ONE,
-	DIALOG_COLOR_TWO
+	DIALOG_COLOR_TWO,
+	DIALOG_MEMBERS
 }
 
 enum 
@@ -83,18 +85,21 @@ enum business_info
 	Float:mechanic_repairY,						// — Coordenada reparación Y
 	Float:mechanic_repairZ,						// — Coordenada reparación Z
 	Float:mechanic_repairR,						// — Coordenada reparación R
-	mechanic_interior,
-	mechanic_world,	
+	mechanic_interior,							// — Interior del /taller
+	mechanic_world,								// — Virtual world del /taller
 	// —— Precios
 	mechanic_price_repair,						// — Precio de reparación
 	mechanic_price_colour,						// — Precio de pintura
 	mechanic_price_gas,							// — Precio de gasolina
 	mechanic_price_oil,							// — Precio de aceite
-	bool:mechanic_charge,							// — Cobrar al usar el /taller
+	bool:mechanic_charge,						// — Cobrar al usar el /taller
 	// —— EMPLEADOS
-	business_maxranks,
+	business_maxranks							// — máximo de rangos
 }
 new Business_Info[MAX_BUSINESS][business_info];
+
+// —— Rangos
+new Business_Ranks[MAX_BUSINESS][MAX_BUSINESS_RANKS][MAX_PLAYER_NAME];
 
 // — others
 new 
@@ -117,6 +122,8 @@ adaptarlo.
 Se verifica el ser Administrador RCON de manera temporal, puesto a que no se tiene en estos módulos
 la información del jugador (Enum), por lo que hacer un enum aparte tendría poco sentido; además de tener
 que incluir un nuevo guardado de datos, que podría interferir con el guardado principal (gamemode)
+
+enum "PlayerBusiness" creado temporalmente para el testeo.
 */
 
 // —— MÓDULOS

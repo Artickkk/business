@@ -1,7 +1,66 @@
-// â€”â€” CREDITOS
-// â€” Artic, 19/Abril
+// —— CREDITOS
+// — Artic, 19/Abril
 
-// â€”â€” ADMINISTRATIVOS
+// —— ADMINISTRATIVOS
+CMD:darempresa(playerid, params[])
+{
+	if (!IsPlayerAdmin(playerid))
+		return 0;
+
+	if (sscanf(params, "ui", params[0], params[1]))
+		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /darempresa (playerid) (empresa)");
+
+	if (!IsPlayerConnected(params[0]))
+		return SendClientMessage(playerid, 0x9D2121FF, "Jugador inválido.");
+
+	if (params[1] > total_business)
+		return SendClientMessage(playerid, 0x942B15FF, "ID inválida");
+
+	if (!Business_Info[params[1]][business_valid])
+		return SendClientMessage(playerid, 0x942B15FF, "ID inválida");			
+
+	if (GetPlayerBusiness(params[0]) != INVALID_BUSINESS_ID)
+		return SendClientMessage(playerid, 0x9D2121FF, "El jugador ya trabaja para una empresa.");
+
+	PlayerBusiness[params[0]][player_rank] = Business_Info[params[1]][business_maxranks];
+	PlayerBusiness[params[0]][player_employee] = params[1];
+
+	Business_Info[params[1]][business_owner] = 1;
+
+	new string[80];
+	format(string, sizeof string, "Se te asignó una empresa. {D17145}(%s #%d, [%d] %s)", GetBusinessType(Business_Info[params[1]][business_type]), params[1], PlayerBusiness[params[0]][player_rank], Business_Ranks[params[1]][PlayerBusiness[params[0]][player_rank]]);
+	SendClientMessage(params[0], 0xD1CCE7FF, string);
+
+	format(string, sizeof string, "Asignaste una empresa. {D17145}(%s #%d, %s)", GetBusinessType(Business_Info[params[1]][business_type]), params[1], PlayerBusiness[params[0]][player_name]);
+	SendClientMessage(playerid, 0xD1CCE7FF, string);
+	return 1;	
+}
+
+CMD:quitarempresa(playerid, params[])
+{
+	if (!IsPlayerAdmin(playerid))
+		return 0;
+	
+	if (sscanf(params, "u", params[0]))
+		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /darempresa (playerid) (empresa)");
+
+	if (!IsPlayerConnected(params[0]))
+		return SendClientMessage(playerid, 0x9D2121FF, "Jugador inválido.");
+
+	if (GetPlayerBusiness(params[0]) == INVALID_BUSINESS_ID)
+		return SendClientMessage(playerid, 0x9D2121FF, "El jugador no trabaja para una empresa.");
+
+	PlayerBusiness[params[0]][player_rank] = 0;
+	PlayerBusiness[params[0]][player_employee] = INVALID_BUSINESS_ID;
+
+	new string[80];
+	format(string, sizeof string, "Expulsaste de una empresa a un jugador. {D17145}(%s)", PlayerBusiness[params[0]][player_name]);
+	SendClientMessage(playerid, 0xD1CCE7FF, string);
+
+	SendClientMessage(params[0], 0xD1CCE7FF, "Se te expulsó de una empresa");
+	return 1;	
+}
+
 CMD:adminempresa(playerid, params[])
 {
 	if (!IsPlayerAdmin(playerid))
@@ -39,10 +98,10 @@ CMD:adminempresa(playerid, params[])
 			return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa borrar [ID]");
 
 		if (business > total_business)
-			return SendClientMessage(playerid, 0x942B15FF, "ID invÃ¡lida");
+			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");
 
 		if (!Business_Info[business][business_valid])
-			return SendClientMessage(playerid, 0x942B15FF, "ID invÃ¡lida");			
+			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");			
 
 		DestroyBusiness(business);
 		new string[80];
@@ -56,10 +115,10 @@ CMD:adminempresa(playerid, params[])
 			return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] [Exterior - interior - precio - tipo - mapicon]");	
 
 		if (business > total_business)
-			return SendClientMessage(playerid, 0x942B15FF, "ID invÃ¡lida");
+			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");
 
 		if (!Business_Info[business][business_valid])
-			return SendClientMessage(playerid, 0x942B15FF, "ID invÃ¡lida");			
+			return SendClientMessage(playerid, 0x942B15FF, "ID inválida");			
 
 		if (!strcmp(type_s, "interior", true, 8))
 		{
@@ -119,13 +178,13 @@ CMD:adminempresa(playerid, params[])
 		{
 			new type;
 			if (sscanf(type_s, "s[6]i", type_s, type)) 
-				return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] tipo [nÃºmero (/tiposempresa)]");				
+				return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] tipo [número (/tiposempresa)]");				
 
 			if (type > BUSINESS_ASEGURADOR)
-				return SendClientMessage(playerid, 0x942B15FF, "NÃºmero muy grande.");
+				return SendClientMessage(playerid, 0x942B15FF, "Número muy grande.");
 
 			if (type < BUSINESS_MECHANIC)
-				return SendClientMessage(playerid, 0x942B15FF, "NÃºmero muy pequeÃ±o.");
+				return SendClientMessage(playerid, 0x942B15FF, "Número muy pequeño.");
 
 			Business_Info[business][business_type] = type;
 			new query[60];
@@ -133,6 +192,7 @@ CMD:adminempresa(playerid, params[])
 			mysql_tquery(handle_business, query);
 
 			UpdateBusinessLabel(business);
+			SetBusinessRanks(business);
 
 			new string[80];
 			format(string, sizeof string, "Editaste una empresa. {D17145}(Tipo: %s, ID: %d)", GetBusinessType(type), business);
@@ -142,7 +202,7 @@ CMD:adminempresa(playerid, params[])
 		{
 			new mapicon;
 			if (sscanf(type_s, "s[10]i", type_s, mapicon))
-				return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] mapicon [nÃºmero]");
+				return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /adminempresa editar [ID] mapicon [número]");
 
 			Business_Info[business][business_iconid] = mapicon;
 			new query[60];
@@ -161,12 +221,12 @@ CMD:tiposempresa(playerid)
 	if (!IsPlayerAdmin(playerid))
 		return 0;
 
-	// â€” iteraciÃ³n sobre el enum, para automatizar segÃºn la cantidad de tipos.
+	// — iteración sobre el enum, para automatizar según la cantidad de tipos.
 	new str[30], totalstr[144];
 	SendClientMessage(playerid, 0xD9D361FF, "TIPOS DE EMPRESAS");
 	for (new i = 1; i < BUSINESS_INVALID; i++) 
 	{
-		format(str, sizeof str, "â€” %d. %s ", i, GetBusinessType(i));
+		format(str, sizeof str, "— %d. %s ", i, GetBusinessType(i));
 		strcat(totalstr, str);
 	}
 	SendClientMessage(playerid, 0xD9D361FF, totalstr);
@@ -196,7 +256,7 @@ CMD:empresas(playerid)
 	return 1;
 }
 
-// â€”â€” LIDER
+// —— LIDER
 CMD:invitar(playerid, params[])
 {
 	new business = GetPlayerBusiness(playerid);
@@ -207,11 +267,11 @@ CMD:invitar(playerid, params[])
 	if (!IsPlayerOwner(playerid, business))
 		return 1;
 
-	if (sscanf(params, "ui", params[0], params[1]))
+	if (sscanf(params, "u", params[0]))
 		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /invitar (playerid)");
 
 	if (!IsPlayerConnected(params[0]) || params[0] == playerid)
-		return SendClientMessage(playerid, 0x9D2121FF, "Jugador invÃ¡lido.");
+		return SendClientMessage(playerid, 0x9D2121FF, "Jugador inválido.");
 
 	if (GetPlayerBusiness(params[0]) != INVALID_BUSINESS_ID)
 		return SendClientMessage(playerid, 0x9D2121FF, "El jugador ya trabaja para una empresa.");
@@ -219,6 +279,36 @@ CMD:invitar(playerid, params[])
 	PlayerBusiness[params[0]][player_rank] = 1;
 	PlayerBusiness[params[0]][player_employee] = business;
 
+	return 1;
+}
+
+CMD:editarcargo(playerid, params[])
+{
+	new business = GetPlayerBusiness(playerid);
+
+	if (business == INVALID_BUSINESS_ID)
+		return 1;
+
+	if (!IsPlayerOwner(playerid, business))
+		return 1;
+
+	if (sscanf(params, "is[24]", params[0], params[1]))
+		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /editarcargo (id del rango) (nuevo nombre)");
+
+	if (params[0] > Business_Info[business][business_maxranks])
+		return SendClientMessage(playerid, 0x9D2121FF, "El rango es muy alto.");
+
+	if (strlen(params[1]) > MAX_PLAYER_NAME || strlen(params[1]) < 3)
+		return SendClientMessage(playerid, 0x9D2121FF, "Nombre inválido");
+
+	format(Business_Ranks[business][params[0]], MAX_PLAYER_NAME, params[1]);
+	new string[90];
+	format(string, sizeof string, "Has editado el rango %d. (%s)", params[0], params[1]);
+	SendClientMessage(playerid, 0xD1CCE7FF, string);
+
+	new query[80];
+	mysql_format(handle_business, query, sizeof query, "UPDATE business SET rank%d = '%e' WHERE ID = %d", params[0], params[1], Business_Info[business][business_ID]);
+	mysql_tquery(handle_business, query);
 	return 1;
 }
 
@@ -236,36 +326,51 @@ CMD:darcargo(playerid, params[])
 		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /darcargo (playerid) (rango)");
 
 	if (!IsPlayerConnected(params[0]) || params[0] == playerid)
-		return SendClientMessage(playerid, 0x9D2121FF, "Jugador invÃ¡lido.");
+		return SendClientMessage(playerid, 0x9D2121FF, "Jugador inválido.");
 
 	if (GetPlayerBusiness(params[0]) != business)
-		return SendClientMessage(playerid, 0x9D2121FF, "El jugador no trabaja para tÃ­.");
+		return SendClientMessage(playerid, 0x9D2121FF, "El jugador no trabaja para tí.");
 
 	if (params[1] > Business_Info[business][business_maxranks])
-		return SendClientMessage(playerid, 0x9D2121FF, "Rango invÃ¡lido.");
+		return SendClientMessage(playerid, 0x9D2121FF, "Rango inválido.");
 
+	new string[90];
 	if (params[1] == 0)
 	{
 		PlayerBusiness[params[0]][player_rank] = 0;
 		PlayerBusiness[params[0]][player_employee] = INVALID_BUSINESS_ID;
-		SendClientMessage(params[0], 0x9D2121FF, "Fuiste despedido.");
+
+		format(string, sizeof string, "Lider %s te ha despedido de la empresa.", PlayerBusiness[playerid][player_name]);
+		SendClientMessage(params[0], 0xD1CCE7FF, string);
 	}
 	else
 	{
 		PlayerBusiness[params[0]][player_rank] = params[1];
-		SendClientMessage(params[0], 0xC0C0C0FF, "Te han dado otro cargo.");
-		SendClientMessage(playerid, 0xC0C0C0FF, "Asignaste un cargo a un empleado.");
+
+		format(string, sizeof string, "Lider %s te ha dado rango %d (%s).", 
+			PlayerBusiness[playerid][player_name], 
+			params[1],
+			Business_Ranks[business][params[1]]
+		);
+		SendClientMessage(params[0], 0xD1CCE7FF, string);
+
+		format(string, sizeof string, "Diste rango %d (%s) a %s.", 
+			params[1],
+			Business_Ranks[business][params[1]],
+			PlayerBusiness[params[0]][player_name]
+		);
+		SendClientMessage(playerid, 0xD1CCE7FF, string);
 	}
 	return 1;
 }
 
-// â€”â€” GENERALES
+// —— GENERALES
 CMD:entrar(playerid)
 {
 	new info_bizz[2];
 	Streamer_GetArrayData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_EXTRA_ID, info_bizz);
 
-	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_EXTERIOR_BIZZ) // â€” Tiene k estar en el exterior
+	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_EXTERIOR_BIZZ) // — Tiene k estar en el exterior
 		return 1;
 
 	new Float:bizzX, Float:bizzY, Float:bizzZ;
@@ -292,7 +397,7 @@ CMD:salir(playerid)
 	new info_bizz[2];
 	Streamer_GetArrayData(STREAMER_TYPE_PICKUP, TempBusiness[playerid][tbusiness_pickup], E_STREAMER_EXTRA_ID, info_bizz);
 
-	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_INTERIOR_BIZZ) // â€” Tiene k estar en interior
+	if (info_bizz[0] == PICKUP_NONE_BIZZ || info_bizz[0] != PICKUP_INTERIOR_BIZZ) // — Tiene k estar en interior
 		return 1;
 
 	new Float:bizzX, Float:bizzY, Float:bizzZ;

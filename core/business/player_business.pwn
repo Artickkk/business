@@ -24,6 +24,32 @@ new PlayerBusiness[MAX_PLAYERS][enum_player_business];
 #endif 
 
 // —— PUBLIC CALLBACKS
+
+public OnPlayerConnect(playerid)
+{
+	#if defined DESBUG_PLAYER_BUSINESS
+	PlayerBusiness[playerid][player_employee] = INVALID_BUSINESS_ID;
+	GetPlayerName(playerid, PlayerBusiness[playerid][player_name], MAX_PLAYER_NAME);
+	#endif
+
+
+	#if defined bizz_OnPlayerConnect
+		return bizz_OnPlayerConnect(playerid);
+	#else
+		return 1;
+	#endif
+}
+#if defined _ALS_OnPlayerConnect
+	#undef OnPlayerConnect
+#else
+	#define _ALS_OnPlayerConnect
+#endif
+
+#define OnPlayerConnect bizz_OnPlayerConnect
+#if defined bizz_OnPlayerConnect
+	forward bizz_OnPlayerConnect(playerid);
+#endif
+
 public OnPlayerPickUpDynamicPickup(playerid, pickupid)
 {
 	TempBusiness[playerid][tbusiness_pickup] = pickupid;
@@ -55,16 +81,26 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 			if (!response)
 				return 0;
 
-			new business = TempBusiness[playerid][tbusiness_listitem][listitem];
-			new totalstr[1024], str[128];
+			new
+				business = TempBusiness[playerid][tbusiness_listitem][listitem],
+				totalstr[1024], 
+				str[35], 
+				count 
+			;
+			strcat(totalstr, "Nombre\tPuesto\n");
 			for (new i = 0, j = GetPlayerPoolSize(); i <= j; i++) if (IsPlayerConnected(i))
 			{
 				if (GetPlayerBusiness(i) != business)
 					continue;
 
-				format(str, sizeof str, "%d. %s (%s)", playerid);
+				format(str, sizeof str, "{C0C0C0}(%d) %s\t%s\n", playerid, PlayerBusiness[playerid][player_name], Business_Ranks[business][PlayerBusiness[playerid][player_rank]]);
 				strcat(totalstr, str);
+				count++;
 			}
+			if (!count)
+				return 0;
+			
+			ShowPlayerDialog(playerid, DIALOG_MEMBERS, DIALOG_STYLE_TABLIST_HEADERS, "Miembros", totalstr, "Aceptar", "Salir");
 		}
 	}
 	#if defined bz_OnDialogResponse

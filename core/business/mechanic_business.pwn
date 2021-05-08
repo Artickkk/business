@@ -295,6 +295,68 @@ public OnDialogResponse(playerid, dialogid, response, listitem, inputtext[])
 #endif
 
 // —— COMANDOS GENERALES
+CMD:remolcar(playerid, params[])
+{
+	new mechanic = GetPlayerBusiness(playerid);
+
+	if (mechanic == INVALID_BUSINESS_ID)
+		return 1;
+
+	if (Business_Info[mechanic][business_type] != BUSINESS_MECHANIC)
+		return 1;
+
+	if(sscanf(params, "d", params[0])) 
+		return SendClientMessage(playerid, 0xC0C0C0FF, "USO: /remolcar [vehicleid]");	
+
+	new vehicleid = GetPlayerVehicleID(playerid);
+	if (GetVehicleModel(vehicleid) != 525) 
+		return SendClientMessage(playerid, 0x9D2121FF, "No estás en una grúa.");
+
+	if (IsTrailerAttachedToVehicle(vehicleid)) 
+		return SendClientMessage(playerid, 0x9D2121FF, "Ya estás remolcando.");
+
+	if (!IsValidVehicle(params[0]))
+		return SendClientMessage(playerid, 0x9D2121FF, "Vehiculo inválido.");
+
+	if (params[0] > MAX_VEHICLES)
+		return SendClientMessage(playerid, 0x9D2121FF, "Vehiculo inválido.");
+
+	if (params[0] == vehicleid)
+		return SendClientMessage(playerid, 0x9D2121FF, "Vehiculo inválido.");		
+
+		
+    new Float:x, Float:y, Float:z;
+    GetVehiclePos(params[0], Float:x, Float:y, Float:z);
+    if(GetPlayerDistanceFromPoint(playerid, x, y, z) > 10.0) 
+    	return SendClientMessage(playerid, 0x9D2121FF, "Vehiculo demasiado lejos");
+
+    AttachTrailerToVehicle(params[0], vehicleid);
+    SendClientMessage(playerid, 0x28344EFF, "Vehiculo remolcado");
+	return 1;
+}
+
+CMD:qremolque(playerid, params[])
+{
+	new mechanic = GetPlayerBusiness(playerid);
+
+	if (mechanic == INVALID_BUSINESS_ID)
+		return 1;
+
+	if (Business_Info[mechanic][business_type] != BUSINESS_MECHANIC)
+		return 1;
+
+	new vehicleid = GetPlayerVehicleID(playerid);
+	if (GetVehicleModel(vehicleid) != 525) 
+		return SendClientMessage(playerid, 0x9D2121FF, "No estás en una grúa.");
+
+	if (!IsTrailerAttachedToVehicle(vehicleid)) 
+		return SendClientMessage(playerid, 0x9D2121FF, "No estás remolcando.");
+
+    DetachTrailerFromVehicle(vehicleid);
+    SendClientMessage(playerid, 0x28344EFF, "Vehiculo removido.");
+	return 1;
+}
+
 CMD:reparar(playerid, params[])
 {
 	new mechanic = GetPlayerBusiness(playerid);
